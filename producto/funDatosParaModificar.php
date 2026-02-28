@@ -17,6 +17,19 @@ try {
     }
 
     // =============================
+    // LEER JSON
+    // =============================
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    if (!isset($data["id"]) || empty($data["id"])) {
+        http_response_code(400);
+        echo json_encode(["mensaje" => "Datos incompletos"]);
+        exit;
+    }
+
+    $id = intval($data["id"]);
+
+    // =============================
     // CONEXIÓN
     // =============================
     $db = new DB();
@@ -27,25 +40,31 @@ try {
     // =============================
     $stmt = $pdo->prepare("
         SELECT 
-            idusuario,
-            nombre,
+            idproducto AS id,
+            categoria,
+            tipo_producto,
+            codigo,
+            descripcion,
+            precio_lista,
+            existencia,
+            url_imagen,
             estado
-        FROM usuario
-        where estado = 'activo'
-        ORDER BY idusuario DESC
+        FROM producto
+        WHERE idproducto = :id
+        LIMIT 1
     ");
 
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
     $stmt->execute();
 
-    $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $producto = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode($usuarios);
-
+    echo json_encode($producto);
 } catch (Exception $e) {
 
     http_response_code(500);
     echo json_encode([
         "mensaje" => "Error interno"
-        // "error" => $e->getMessage() // usar solo en desarrollo
+        // "error" => $e->getMessage() // solo en desarrollo
     ]);
 }

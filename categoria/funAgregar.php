@@ -17,21 +17,15 @@ try {
     }
 
     // =============================
-    // VALIDAR CAMPOS
+    // VALIDAR DESCRIPCIÓN
     // =============================
-    if (
-        empty($_POST["idModificar"]) ||
-        empty($_POST["nombreModificar"]) ||
-        empty($_POST["estadoModificar"])
-    ) {
+    if (!isset($_POST["descripcionAgregar"]) || empty(trim($_POST["descripcionAgregar"]))) {
         http_response_code(400);
         echo json_encode(["mensaje" => "Datos incompletos"]);
         exit;
     }
 
-    $id     = intval($_POST["idModificar"]);
-    $nombre = trim($_POST["nombreModificar"]);
-    $estado = trim($_POST["estadoModificar"]);
+    $descripcion = trim($_POST["descripcionAgregar"]);
 
     // =============================
     // CONEXIÓN
@@ -40,37 +34,30 @@ try {
     $pdo = $db->connect();
 
     // =============================
-    // VALIDAR DUPLICADO (EXCEPTO MISMO ID)
+    // VERIFICAR DUPLICADO
     // =============================
     $stmtExiste = $pdo->prepare("
         SELECT COUNT(*) 
-        FROM usuario 
-        WHERE nombre = :nombre 
-        AND idusuario != :id
+        FROM categoria 
+        WHERE descripcion = :descripcion
     ");
-
-    $stmtExiste->bindParam(":nombre", $nombre, PDO::PARAM_STR);
-    $stmtExiste->bindParam(":id", $id, PDO::PARAM_INT);
+    $stmtExiste->bindParam(":descripcion", $descripcion, PDO::PARAM_STR);
     $stmtExiste->execute();
 
     if ($stmtExiste->fetchColumn() > 0) {
-        echo json_encode(["mensaje" => "repetido"]);
+        echo json_encode(["mensaje" => "registro_existente"]);
         exit;
     }
 
     // =============================
-    // ACTUALIZAR
+    // INSERTAR
     // =============================
     $stmt = $pdo->prepare("
-        UPDATE usuario SET
-            nombre = :nombre,
-            estado = :estado
-        WHERE idusuario = :id
+        INSERT INTO categoria (descripcion, estado)
+        VALUES (:descripcion, 'activo')
     ");
 
-    $stmt->bindParam(":nombre", $nombre);
-    $stmt->bindParam(":estado", $estado);
-    $stmt->bindParam(":id", $id);
+    $stmt->bindParam(":descripcion", $descripcion, PDO::PARAM_STR);
 
     if ($stmt->execute()) {
         echo json_encode(["mensaje" => "ok"]);
@@ -82,6 +69,6 @@ try {
     http_response_code(500);
     echo json_encode([
         "mensaje" => "Error interno"
-        // "error" => $e->getMessage()
+        // "error" => $e->getMessage() // usar solo en desarrollo
     ]);
 }

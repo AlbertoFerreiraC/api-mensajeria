@@ -47,10 +47,28 @@ try {
         exit;
     }
 
-    if ($respuesta["pass"] != $password) {
-        http_response_code(401);
-        echo json_encode(["mensaje" => "Contraseña incorrecta"]);
-        exit;
+    // =============================
+    // VALIDAR CONTRASEÑA
+    // =============================
+
+    $hashGuardado = $respuesta["pass"];
+
+    // Si el password guardado parece un hash moderno
+    if (password_get_info($hashGuardado)["algo"] !== 0) {
+
+        if (!password_verify($password, $hashGuardado)) {
+            http_response_code(401);
+            echo json_encode(["mensaje" => "Contraseña incorrecta"]);
+            exit;
+        }
+    } else {
+        // Compatibilidad con usuarios antiguos (texto plano)
+
+        if ($hashGuardado !== $password) {
+            http_response_code(401);
+            echo json_encode(["mensaje" => "Contraseña incorrecta"]);
+            exit;
+        }
     }
 
     // Crear sesión

@@ -17,35 +17,45 @@ try {
     }
 
     // =============================
+    // LEER JSON
+    // =============================
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    if (!isset($data["id"]) || empty($data["id"])) {
+        http_response_code(400);
+        echo json_encode(["mensaje" => "Datos incompletos"]);
+        exit;
+    }
+
+    $id = intval($data["id"]);
+
+    // =============================
     // CONEXIÓN
     // =============================
     $db = new DB();
     $pdo = $db->connect();
 
     // =============================
-    // CONSULTA
+    // ACTUALIZAR ESTADO A INACTIVO
     // =============================
     $stmt = $pdo->prepare("
-        SELECT 
-            idusuario,
-            nombre,
-            estado
-        FROM usuario
-        where estado = 'activo'
-        ORDER BY idusuario DESC
+        UPDATE categoria
+        SET estado = 'inactivo'
+        WHERE idcategoria = :id
     ");
 
-    $stmt->execute();
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
-    $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    echo json_encode($usuarios);
-
+    if ($stmt->execute()) {
+        echo json_encode(["mensaje" => "ok"]);
+    } else {
+        echo json_encode(["mensaje" => "nok"]);
+    }
 } catch (Exception $e) {
 
     http_response_code(500);
     echo json_encode([
         "mensaje" => "Error interno"
-        // "error" => $e->getMessage() // usar solo en desarrollo
+        // "error" => $e->getMessage() // solo en desarrollo
     ]);
 }

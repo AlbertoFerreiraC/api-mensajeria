@@ -8,10 +8,10 @@ class DB{
     private $charset;
 
     public function __construct(){
-         $this->host     = '181.126.51.166';
+         $this->host     = 'localhost';
          $this->db       = 'gestor_mensajeria';
          $this->user     = 'root';
-         $this->password = "ulises789";
+         $this->password = "";
          $this->charset  = 'utf8';
     }
 

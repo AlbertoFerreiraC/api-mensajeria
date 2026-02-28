@@ -27,25 +27,24 @@ try {
     // =============================
     $stmt = $pdo->prepare("
         SELECT 
-            idusuario,
-            nombre,
+            idcategoria AS id,
+            descripcion,
             estado
-        FROM usuario
+        FROM categoria
         where estado = 'activo'
-        ORDER BY idusuario DESC
+        ORDER BY idcategoria DESC
     ");
 
     $stmt->execute();
 
-    $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode($usuarios);
-
+    echo json_encode($categorias);
 } catch (Exception $e) {
 
     http_response_code(500);
     echo json_encode([
         "mensaje" => "Error interno"
-        // "error" => $e->getMessage() // usar solo en desarrollo
+        // "error" => $e->getMessage() // solo en desarrollo
     ]);
 }

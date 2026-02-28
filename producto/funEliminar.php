@@ -17,21 +17,17 @@ try {
     }
 
     // =============================
-    // VALIDAR CAMPOS
+    // LEER JSON
     // =============================
-    if (
-        empty($_POST["idModificar"]) ||
-        empty($_POST["nombreModificar"]) ||
-        empty($_POST["estadoModificar"])
-    ) {
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    if (!isset($data["id"]) || empty($data["id"])) {
         http_response_code(400);
         echo json_encode(["mensaje" => "Datos incompletos"]);
         exit;
     }
 
-    $id     = intval($_POST["idModificar"]);
-    $nombre = trim($_POST["nombreModificar"]);
-    $estado = trim($_POST["estadoModificar"]);
+    $id = intval($data["id"]);
 
     // =============================
     // CONEXIÓN
@@ -40,37 +36,32 @@ try {
     $pdo = $db->connect();
 
     // =============================
-    // VALIDAR DUPLICADO (EXCEPTO MISMO ID)
+    // VERIFICAR QUE EXISTA
     // =============================
     $stmtExiste = $pdo->prepare("
         SELECT COUNT(*) 
-        FROM usuario 
-        WHERE nombre = :nombre 
-        AND idusuario != :id
+        FROM producto 
+        WHERE idproducto = :id
     ");
 
-    $stmtExiste->bindParam(":nombre", $nombre, PDO::PARAM_STR);
     $stmtExiste->bindParam(":id", $id, PDO::PARAM_INT);
     $stmtExiste->execute();
 
-    if ($stmtExiste->fetchColumn() > 0) {
-        echo json_encode(["mensaje" => "repetido"]);
+    if ($stmtExiste->fetchColumn() == 0) {
+        echo json_encode(["mensaje" => "nok"]);
         exit;
     }
 
     // =============================
-    // ACTUALIZAR
+    // SOFT DELETE
     // =============================
     $stmt = $pdo->prepare("
-        UPDATE usuario SET
-            nombre = :nombre,
-            estado = :estado
-        WHERE idusuario = :id
+        UPDATE producto
+        SET estado = 'inactivo'
+        WHERE idproducto = :id
     ");
 
-    $stmt->bindParam(":nombre", $nombre);
-    $stmt->bindParam(":estado", $estado);
-    $stmt->bindParam(":id", $id);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
     if ($stmt->execute()) {
         echo json_encode(["mensaje" => "ok"]);
