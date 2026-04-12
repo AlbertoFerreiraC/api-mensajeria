@@ -6,16 +6,6 @@ header("Content-Type: application/json");
 session_start();
 
 try {
-
-    // =============================
-    // VALIDAR SESIÓN
-    // =============================
-    if (!isset($_SESSION["iniciarSesion"]) || $_SESSION["iniciarSesion"] != "ok") {
-        http_response_code(401);
-        echo json_encode(["mensaje" => "No autorizado"]);
-        exit;
-    }
-
     // =============================
     // VALIDAR CAMPOS
     // =============================

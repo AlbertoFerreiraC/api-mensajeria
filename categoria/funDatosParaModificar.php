@@ -8,15 +8,6 @@ session_start();
 try {
 
     // =============================
-    // VALIDAR SESIÓN
-    // =============================
-    if (!isset($_SESSION["iniciarSesion"]) || $_SESSION["iniciarSesion"] != "ok") {
-        http_response_code(401);
-        echo json_encode(["mensaje" => "No autorizado"]);
-        exit;
-    }
-
-    // =============================
     // LEER JSON ENVIADO DESDE JS
     // =============================
     $data = json_decode(file_get_contents("php://input"), true);
