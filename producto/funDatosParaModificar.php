@@ -32,13 +32,9 @@ try {
         SELECT 
             idproducto AS id,
             categoria,
-            tipo_producto,
-            codigo,
             descripcion,
             precio_lista,
-            existencia,
-            url_imagen,
-            estado
+            url_imagen
         FROM producto
         WHERE idproducto = :id
         LIMIT 1

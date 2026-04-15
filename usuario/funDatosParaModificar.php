@@ -34,7 +34,7 @@ try {
             nombre,
             estado
         FROM usuario
-        WHERE idusuario = :id
+        WHERE idusuario = :id and estado = 'activo'
         LIMIT 1
     ");
 

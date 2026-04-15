@@ -11,25 +11,17 @@ try {
     // =============================
     if (
         empty($_POST["categoria"]) ||
-        empty($_POST["tipo_producto"]) ||
-        empty($_POST["codigo"]) ||
         empty($_POST["descripcion"]) ||
-        empty($_POST["precio_lista"]) ||
-        empty($_POST["existencia"]) ||
-        empty($_POST["estado"])
+        empty($_POST["precio_lista"])
     ) {
         http_response_code(400);
         echo json_encode(["mensaje" => "Datos incompletos"]);
         exit;
     }
 
-    $categoria      = trim($_POST["categoria"]);
-    $tipo_producto  = trim($_POST["tipo_producto"]);
-    $codigo         = trim($_POST["codigo"]);
-    $descripcion    = trim($_POST["descripcion"]);
-    $precio_lista   = floatval($_POST["precio_lista"]);
-    $existencia     = intval($_POST["existencia"]);
-    $estado         = trim($_POST["estado"]);
+    $categoria = trim($_POST["categoria"]);
+    $descripcion = trim($_POST["descripcion"]);
+    $precio_lista = floatval($_POST["precio_lista"]);
 
     // =============================
     // CONEXIÓN
@@ -43,10 +35,10 @@ try {
     $stmtExiste = $pdo->prepare("
         SELECT COUNT(*) 
         FROM producto 
-        WHERE codigo = :codigo
+        WHERE descripcion = :descripcion and estado != 'inactivo'
     ");
 
-    $stmtExiste->bindParam(":codigo", $codigo, PDO::PARAM_STR);
+    $stmtExiste->bindParam(":descripcion", $descripcion, PDO::PARAM_STR);
     $stmtExiste->execute();
 
     if ($stmtExiste->fetchColumn() > 0) {
@@ -98,19 +90,15 @@ try {
     // =============================
     $stmt = $pdo->prepare("
         INSERT INTO producto 
-        (categoria, tipo_producto, codigo, descripcion, precio_lista, existencia, url_imagen, estado)
+        (categoria, descripcion, precio_lista, url_imagen, estado)
         VALUES
-        (:categoria, :tipo_producto, :codigo, :descripcion, :precio_lista, :existencia, :url_imagen, :estado)
+        (:categoria, :descripcion, :precio_lista, :url_imagen, 'activo')
     ");
 
     $stmt->bindParam(":categoria", $categoria);
-    $stmt->bindParam(":tipo_producto", $tipo_producto);
-    $stmt->bindParam(":codigo", $codigo);
     $stmt->bindParam(":descripcion", $descripcion);
     $stmt->bindParam(":precio_lista", $precio_lista);
-    $stmt->bindParam(":existencia", $existencia);
     $stmt->bindParam(":url_imagen", $rutaGuardar);
-    $stmt->bindParam(":estado", $estado);
 
     if ($stmt->execute()) {
         echo json_encode(["mensaje" => "ok"]);
@@ -121,7 +109,7 @@ try {
 
     http_response_code(500);
     echo json_encode([
-        "mensaje" => "Error interno"
-        // "error" => $e->getMessage() // activar solo en desarrollo
+        "mensaje" => "Error interno",
+        "error" => $e->getMessage() // activar solo en desarrollo
     ]);
 }

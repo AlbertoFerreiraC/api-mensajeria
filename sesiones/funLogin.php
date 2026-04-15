@@ -19,18 +19,17 @@ $password = base64_decode($data["pass"]);
 
 try {
 
-    // 🔥 Crear conexión correctamente
     $db = new DB();
     $pdo = $db->connect();
 
     $stmt = $pdo->prepare("
-        SELECT idusuario, nombre, pass, estado
-        FROM usuario
-        WHERE nombre = :usuario
-        LIMIT 1
+    SELECT idusuario, nombre, pass, estado
+    FROM usuario
+    WHERE LOWER(nombre) = LOWER(:nombre)
+    LIMIT 1
     ");
 
-    $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
+    $stmt->bindParam(":nombre", $usuario, PDO::PARAM_STR);
     $stmt->execute();
 
     $respuesta = $stmt->fetch(PDO::FETCH_ASSOC);

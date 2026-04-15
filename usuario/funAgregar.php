@@ -10,8 +10,7 @@ try {
     // VALIDAR CAMPOS
     // =============================
     if (
-        empty($_POST["nombreAgregar"]) ||
-        empty($_POST["estadoAgregar"])
+        empty($_POST["nombreAgregar"])
     ) {
         http_response_code(400);
         echo json_encode(["mensaje" => "Datos incompletos"]);
@@ -19,7 +18,6 @@ try {
     }
 
     $nombre = trim($_POST["nombreAgregar"]);
-    $estado = trim($_POST["estadoAgregar"]);
 
     // =============================
     // CONEXIÓN
@@ -54,12 +52,11 @@ try {
     // =============================
     $stmt = $pdo->prepare("
         INSERT INTO usuario (nombre, pass, estado)
-        VALUES (:nombre, :pass, :estado)
+        VALUES (:nombre, :pass, 'activo')
     ");
 
     $stmt->bindParam(":nombre", $nombre);
     $stmt->bindParam(":pass", $passwordDefault);
-    $stmt->bindParam(":estado", $estado);
 
     if ($stmt->execute()) {
         echo json_encode(["mensaje" => "ok"]);

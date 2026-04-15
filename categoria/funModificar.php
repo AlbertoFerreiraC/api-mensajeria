@@ -11,7 +11,6 @@ try {
     // =============================
     if (
         !isset($_POST["descripcionModificar"]) ||
-        !isset($_POST["estadoModificar"]) ||
         !isset($_POST["idModificar"])
     ) {
         http_response_code(400);
@@ -20,7 +19,6 @@ try {
     }
 
     $descripcion = trim($_POST["descripcionModificar"]);
-    $estado      = trim($_POST["estadoModificar"]);
     $id          = intval($_POST["idModificar"]);
 
     // =============================
@@ -53,13 +51,11 @@ try {
     // =============================
     $stmt = $pdo->prepare("
         UPDATE categoria
-        SET descripcion = :descripcion,
-            estado = :estado
+        SET descripcion = :descripcion
         WHERE idcategoria = :id
     ");
 
     $stmt->bindParam(":descripcion", $descripcion, PDO::PARAM_STR);
-    $stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
     $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
     if ($stmt->execute()) {

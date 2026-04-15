@@ -11,8 +11,7 @@ try {
     // =============================
     if (
         empty($_POST["idModificar"]) ||
-        empty($_POST["nombreModificar"]) ||
-        empty($_POST["estadoModificar"])
+        empty($_POST["nombreModificar"])
     ) {
         http_response_code(400);
         echo json_encode(["mensaje" => "Datos incompletos"]);
@@ -21,7 +20,6 @@ try {
 
     $id     = intval($_POST["idModificar"]);
     $nombre = trim($_POST["nombreModificar"]);
-    $estado = trim($_POST["estadoModificar"]);
 
     // =============================
     // CONEXIÓN
@@ -53,13 +51,11 @@ try {
     // =============================
     $stmt = $pdo->prepare("
         UPDATE usuario SET
-            nombre = :nombre,
-            estado = :estado
+            nombre = :nombre
         WHERE idusuario = :id
     ");
 
     $stmt->bindParam(":nombre", $nombre);
-    $stmt->bindParam(":estado", $estado);
     $stmt->bindParam(":id", $id);
 
     if ($stmt->execute()) {

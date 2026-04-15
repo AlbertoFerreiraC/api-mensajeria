@@ -12,26 +12,18 @@ try {
     if (
         empty($_POST["idModificar"]) ||
         empty($_POST["categoriaModificar"]) ||
-        empty($_POST["tipo_productoModificar"]) ||
-        empty($_POST["codigoModificar"]) ||
         empty($_POST["descripcionModificar"]) ||
-        empty($_POST["precio_listaModificar"]) ||
-        empty($_POST["existenciaModificar"]) ||
-        empty($_POST["estadoModificar"])
+        empty($_POST["precio_listaModificar"])
     ) {
         http_response_code(400);
         echo json_encode(["mensaje" => "Datos incompletos"]);
         exit;
     }
 
-    $id             = intval($_POST["idModificar"]);
-    $categoria      = trim($_POST["categoriaModificar"]);
-    $tipo_producto  = trim($_POST["tipo_productoModificar"]);
-    $codigo         = trim($_POST["codigoModificar"]);
-    $descripcion    = trim($_POST["descripcionModificar"]);
-    $precio_lista   = floatval($_POST["precio_listaModificar"]);
-    $existencia     = intval($_POST["existenciaModificar"]);
-    $estado         = trim($_POST["estadoModificar"]);
+    $id = intval($_POST["idModificar"]);
+    $categoria = trim($_POST["categoriaModificar"]);
+    $descripcion = trim($_POST["descripcionModificar"]);
+    $precio_lista = floatval($_POST["precio_listaModificar"]);
 
     // =============================
     // CONEXIÓN
@@ -43,15 +35,16 @@ try {
     // VALIDAR CÓDIGO DUPLICADO (EXCEPTO EL MISMO ID)
     // =============================
     $stmtExiste = $pdo->prepare("
-        SELECT COUNT(*) 
-        FROM producto 
-        WHERE codigo = :codigo 
-        AND idproducto != :id
+    SELECT COUNT(*) 
+    FROM producto 
+    WHERE descripcion = :descripcion 
+    AND categoria = :categoria
+    AND idproducto != :id
     ");
 
-    $stmtExiste->bindParam(":codigo", $codigo);
+    $stmtExiste->bindParam(":descripcion", $descripcion);
+    $stmtExiste->bindParam(":categoria", $categoria);
     $stmtExiste->bindParam(":id", $id);
-    $stmtExiste->execute();
 
     if ($stmtExiste->fetchColumn() > 0) {
         echo json_encode(["mensaje" => "repetido"]);
@@ -117,24 +110,16 @@ try {
     $stmt = $pdo->prepare("
         UPDATE producto SET
             categoria = :categoria,
-            tipo_producto = :tipo_producto,
-            codigo = :codigo,
             descripcion = :descripcion,
             precio_lista = :precio_lista,
-            existencia = :existencia,
-            url_imagen = :url_imagen,
-            estado = :estado
+            url_imagen = :url_imagen
         WHERE idproducto = :id
     ");
 
     $stmt->bindParam(":categoria", $categoria);
-    $stmt->bindParam(":tipo_producto", $tipo_producto);
-    $stmt->bindParam(":codigo", $codigo);
     $stmt->bindParam(":descripcion", $descripcion);
     $stmt->bindParam(":precio_lista", $precio_lista);
-    $stmt->bindParam(":existencia", $existencia);
     $stmt->bindParam(":url_imagen", $rutaGuardar);
-    $stmt->bindParam(":estado", $estado);
     $stmt->bindParam(":id", $id);
 
     if ($stmt->execute()) {

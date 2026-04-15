@@ -19,11 +19,8 @@ try {
         SELECT 
             idproducto AS id,
             categoria,
-            tipo_producto,
-            codigo,
             descripcion,
             precio_lista,
-            existencia,
             url_imagen,
             estado
         FROM producto
