@@ -1,36 +1,28 @@
 <?php
 
-class DB{
-    private $host;
-    private $db;
-    private $user;
-    private $password;
-    private $charset;
+$host = "162.220.10.11";
+$dbname = "dosisma_rma_bd";
+$user = "dosisma_rma";
+$password = "tesis2026bruno";
 
-    public function __construct(){
-         $this->host     = 'localhost';
-         $this->db       = 'gestor_mensajeria';
-         $this->user     = 'root';
-         $this->password = "";
-         $this->charset  = 'utf8';
-    }
+try {
 
-    function connect(){
-    
-        try{
-            
-            $connection = "mysql:host=".$this->host.";dbname=" . $this->db . ";charset=" . $this->charset;
-            $options = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ];
-            //$pdo = new PDO($connection, $this->user, $this->password, $options);
-            $pdo = new PDO($connection,$this->user,$this->password);
-        
-            return $pdo;
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        $user,
+        $password
+    );
 
-        }catch(PDOException $e){
-            print_r('Error connection: ' . $e->getMessage());
-        }   
-    }
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+} catch (PDOException $e) {
+
+    http_response_code(500);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Error de conexión a la base de datos"
+    ]);
+
+    exit;
 }

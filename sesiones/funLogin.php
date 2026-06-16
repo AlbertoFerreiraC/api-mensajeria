@@ -1,90 +1,67 @@
 <?php
 
-require_once "../db.php";
-
-header("Content-Type: application/json");
 session_start();
+header('Content-Type: application/json; charset=utf-8');
 
-// Leer JSON enviado desde JS
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (!isset($data["usuario"]) || !isset($data["pass"])) {
-    http_response_code(400);
-    echo json_encode(["mensaje" => "Datos incompletos"]);
-    exit;
-}
-
-$usuario = $data["usuario"];
-$password = base64_decode($data["pass"]);
+require_once '../db.php';
 
 try {
 
-    $db = new DB();
-    $pdo = $db->connect();
+    $usuario = trim($_POST["usuario"] ?? '');
+    $password = $_POST["password"] ?? '';
 
-    $stmt = $pdo->prepare("
-    SELECT idusuario, nombre, pass, estado
-    FROM usuario
-    WHERE LOWER(nombre) = LOWER(:nombre)
-    LIMIT 1
-    ");
+    if (empty($usuario) || empty($password)) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Complete todos los campos"
+        ]);
+        exit;
+    }
 
-    $stmt->bindParam(":nombre", $usuario, PDO::PARAM_STR);
+    $sql = "SELECT id, id_rol, usuario, nombre, email, contrasena_hash
+            FROM usuarios
+            WHERE usuario = :usuario
+            LIMIT 1";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':usuario', $usuario);
     $stmt->execute();
 
-    $respuesta = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$respuesta) {
+    if (!$user || $password !== $user["contrasena_hash"]) {
+
         http_response_code(401);
-        echo json_encode(["mensaje" => "Usuario no existe"]);
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Usuario o contraseña incorrectos"
+        ]);
         exit;
     }
 
-    if ($respuesta["estado"] != "activo") {
-        http_response_code(401);
-        echo json_encode(["mensaje" => "Usuario inactivo"]);
-        exit;
-    }
+    /* =========================
+       🔥 GUARDAR SESIÓN AQUÍ
+    ========================= */
+    $_SESSION["id"] = $user["id"];
+    $_SESSION["id_rol"] = $user["id_rol"];
+    $_SESSION["usuario"] = $user["usuario"];
+    $_SESSION["nombre"] = $user["nombre"];
+    $_SESSION["email"] = $user["email"];
 
-    // =============================
-    // VALIDAR CONTRASEÑA
-    // =============================
-
-    $hashGuardado = $respuesta["pass"];
-
-    // Si el password guardado parece un hash moderno
-    if (password_get_info($hashGuardado)["algo"] !== 0) {
-
-        if (!password_verify($password, $hashGuardado)) {
-            http_response_code(401);
-            echo json_encode(["mensaje" => "Contraseña incorrecta"]);
-            exit;
-        }
-    } else {
-        // Compatibilidad con usuarios antiguos (texto plano)
-
-        if ($hashGuardado !== $password) {
-            http_response_code(401);
-            echo json_encode(["mensaje" => "Contraseña incorrecta"]);
-            exit;
-        }
-    }
-
-    // Crear sesión
-    $_SESSION["iniciarSesion"] = "ok";
-    $_SESSION["idusuario"] = $respuesta["idusuario"];
-    $_SESSION["nombre"] = $respuesta["nombre"];
-
-    http_response_code(200);
     echo json_encode([
-        "idusuario" => $respuesta["idusuario"],
-        "nombre" => $respuesta["nombre"]
+        "success" => true,
+        "nombre" => $user["nombre"],
+        "redirect" => "inicio" // 👈 importante
     ]);
+
 } catch (Exception $e) {
 
     http_response_code(500);
+
     echo json_encode([
-        "mensaje" => "Error interno",
-        "error" => $e->getMessage() // puedes quitar esto en producción
+        "success" => false,
+        "message" => "Error interno"
     ]);
 }
