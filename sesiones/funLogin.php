@@ -30,6 +30,7 @@ try {
 
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Nota: Si usas encriptación real cambia esto por !password_verify($password, $user["contrasena_hash"])
     if (!$user || $password !== $user["contrasena_hash"]) {
 
         http_response_code(401);
@@ -42,7 +43,7 @@ try {
     }
 
     /* =========================
-       🔥 GUARDAR SESIÓN AQUÍ
+        🔥 GUARDAR SESIÓN AQUÍ
     ========================= */
     $_SESSION["id"] = $user["id"];
     $_SESSION["id_rol"] = $user["id_rol"];
@@ -50,10 +51,21 @@ try {
     $_SESSION["nombre"] = $user["nombre"];
     $_SESSION["email"] = $user["email"];
 
+    /* =========================================
+        CÁLCULO DINÁMICO DEL DESTINO POR ROL
+    ========================================= */
+    $redirigirA = "inicio"; // Por defecto administrativo
+
+    if ((int) $user["id_rol"] === 1) {
+        $redirigirA = "perfil_tecnico";
+    } else if ((int) $user["id_rol"] === 2) {
+        $redirigirA = "inicio";
+    }
+
     echo json_encode([
         "success" => true,
         "nombre" => $user["nombre"],
-        "redirect" => "inicio" // 👈 importante
+        "redirect" => $redirigirA // Ahora devuelve el string correcto para tu router
     ]);
 
 } catch (Exception $e) {
