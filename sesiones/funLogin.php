@@ -30,9 +30,34 @@ try {
 
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Nota: Si usas encriptación real cambia esto por !password_verify($password, $user["contrasena_hash"])
-    if (!$user || $password !== $user["contrasena_hash"]) {
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode([
+            "success" => false,
+            "message" => "Usuario o contraseña incorrectos"
+        ]);
+        exit;
+    }
 
+    $storedPassword = $user["contrasena_hash"];
+
+    // ==========================================
+    // 🔐 VALIDACIÓN DOBLE (HASH + TEXTO PLANO)
+    // ==========================================
+
+    $isValid = false;
+
+    // 1. Si es hash bcrypt
+    if (str_starts_with($storedPassword, '$2y$')) {
+        $isValid = password_verify($password, $storedPassword);
+    }
+
+    // 2. Si es texto plano (legacy)
+    else {
+        $isValid = ($password === $storedPassword);
+    }
+
+    if (!$isValid) {
         http_response_code(401);
 
         echo json_encode([
@@ -43,7 +68,7 @@ try {
     }
 
     /* =========================
-        🔥 GUARDAR SESIÓN AQUÍ
+        🔥 SESIÓN
     ========================= */
     $_SESSION["id"] = $user["id"];
     $_SESSION["id_rol"] = $user["id_rol"];
@@ -51,21 +76,23 @@ try {
     $_SESSION["nombre"] = $user["nombre"];
     $_SESSION["email"] = $user["email"];
 
-    /* =========================================
-        CÁLCULO DINÁMICO DEL DESTINO POR ROL
-    ========================================= */
-    $redirigirA = "inicio"; // Por defecto administrativo
+    /* =========================
+        REDIRECCIÓN POR ROL
+    ========================= */
+    $redirigirA = "inicio";
 
     if ((int) $user["id_rol"] === 1) {
         $redirigirA = "perfil_tecnico";
-    } else if ((int) $user["id_rol"] === 2) {
+    }
+
+    if ((int) $user["id_rol"] === 2) {
         $redirigirA = "inicio";
     }
 
     echo json_encode([
         "success" => true,
         "nombre" => $user["nombre"],
-        "redirect" => $redirigirA // Ahora devuelve el string correcto para tu router
+        "redirect" => $redirigirA
     ]);
 
 } catch (Exception $e) {
@@ -74,6 +101,6 @@ try {
 
     echo json_encode([
         "success" => false,
-        "message" => "Error interno"
+        "message" => "Error interno del servidor"
     ]);
 }
